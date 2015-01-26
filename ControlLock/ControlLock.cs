@@ -33,7 +33,7 @@ namespace ControlLock
             unboundKeys = new List<KeyBind>();
             allKeys = new List<KeyBindString>();
             allKeys = GetKeyList();
-            Debug.Log("ControlLock V1.0 Started");
+            Debug.Log("ControlLock V1.1 Started");
             DoNotDestroy.DontDestroyOnLoad(this); //never unload this class so we persist across scenes.
             ConfigNode controlLockNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/001ControlLock/LockedKeys.cfg");
             if(controlLockNode.nodes.Count > 0)
@@ -51,7 +51,7 @@ namespace ControlLock
             GameEvents.onGameSceneLoadRequested.Add(SceneSwitch);
             if (ToolbarManager.ToolbarAvailable) //check if toolbar available, load if it is
             {
-                Debug.Log("Make button3");
+                //Debug.Log("Make button3");
                 CLBtn = ToolbarManager.Instance.add("CtrlLock", "CLButton");
                 CLBtn.TexturePath = "001ControlLock/ToolbarButton";
                 CLBtn.ToolTip = "Control Lock";
@@ -184,11 +184,13 @@ namespace ControlLock
             if(lockedMods.Count == 0 && lockIsSet)
             {
                 RebindKeys();
+                InputLockManager.RemoveControlLock("ControlLock");
                 lockIsSet = false;
             }
             if (lockedMods.Count >= 1 && !lockIsSet)
             {
                 UnbindKeys();
+                InputLockManager.SetControlLock(ControlTypes.All, "ControlLock");
                 lockIsSet = true;
             }
         }
@@ -203,6 +205,7 @@ namespace ControlLock
             {
                 UnbindKeys();
                 lockIsSet = true; //set our lock true as we just locked everything
+                InputLockManager.SetControlLock(ControlTypes.All, "ControlLock");
              }
             UpdateButton();
         }
@@ -250,6 +253,7 @@ namespace ControlLock
             if (lockIsSet && lockedMods.Count == 0) //only rebind keys if no other mod is locking us out, if not zero after remove on line above, still another mod locking us out so do not rebind
             {
                 RebindKeys();
+                InputLockManager.RemoveControlLock("ControlLock");
                 lockIsSet = false; //set our lock false as we just unlocked everything
             }
             UpdateButton();
