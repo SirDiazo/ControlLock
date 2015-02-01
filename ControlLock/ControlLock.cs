@@ -33,7 +33,7 @@ namespace ControlLock
             unboundKeys = new List<KeyBind>();
             allKeys = new List<KeyBindString>();
             allKeys = GetKeyList();
-            Debug.Log("ControlLock V1.1 Started");
+            Debug.Log("ControlLock V1.2 Started");
             DoNotDestroy.DontDestroyOnLoad(this); //never unload this class so we persist across scenes.
             ConfigNode controlLockNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/001ControlLock/LockedKeys.cfg");
             if(controlLockNode.nodes.Count > 0)
@@ -116,10 +116,8 @@ namespace ControlLock
 
         public void AddButtons()
         {
-                Debug.Log("Make button");
                 if (!buttonCreated)
                 {
-                    Debug.Log("Make buttonB");
                     CLButton = ApplicationLauncher.Instance.AddModApplication(ToolbarClick, ToolbarClick, DummyVoid, DummyVoid, DummyVoid, DummyVoid, ApplicationLauncher.AppScenes.ALWAYS, (Texture)GameDatabase.Instance.GetTexture("001ControlLock/ToolbarButton", false));
                     GameEvents.onGUIApplicationLauncherReady.Remove(AddButtons);
                     buttonCreated = true;
@@ -159,7 +157,8 @@ namespace ControlLock
 
         public void ToolbarClick()
         {
-            if(!lockedMods.Contains("ButtonLock")) //are we currently locked by toolbar button?
+            Debug.Log("clicked");
+            if(!lockedMods.Contains("ButtonLock")) //are we currently locked by toolbar button? 
             {
                 SetFullLock("ButtonLock"); //no we are not, lock
             }
@@ -190,7 +189,7 @@ namespace ControlLock
             if (lockedMods.Count >= 1 && !lockIsSet)
             {
                 UnbindKeys();
-                InputLockManager.SetControlLock(ControlTypes.All, "ControlLock");
+                InputLockManager.SetControlLock((ControlTypes)18442513152965869503, "ControlLock");
                 lockIsSet = true;
             }
         }
@@ -205,7 +204,7 @@ namespace ControlLock
             {
                 UnbindKeys();
                 lockIsSet = true; //set our lock true as we just locked everything
-                InputLockManager.SetControlLock(ControlTypes.All, "ControlLock");
+                InputLockManager.SetControlLock((ControlTypes)18442513152965869503, "ControlLock");
              }
             UpdateButton();
         }
