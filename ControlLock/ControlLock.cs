@@ -21,6 +21,12 @@ namespace ControlLock
         static Texture buttonGray = new Texture2D(64, 64);
         static Texture buttonRed = new Texture2D(64, 64);
         static Texture buttonYellow = new Texture2D(64, 64);
+        private ConfigNode settings;
+        private bool showKeysWindow;
+        private KeyCode clKey;
+        private KeyCode clModKey;
+        private bool setClKey;
+        private bool setClModKey;
         
         
         public void Start()
@@ -33,7 +39,7 @@ namespace ControlLock
             unboundKeys = new List<KeyBind>();
             allKeys = new List<KeyBindString>();
             allKeys = GetKeyList();
-            Debug.Log("ControlLock V1.2 Started");
+            Debug.Log("ControlLock V1.3 Started");
             DoNotDestroy.DontDestroyOnLoad(this); //never unload this class so we persist across scenes.
             ConfigNode controlLockNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/001ControlLock/LockedKeys.cfg");
             if(controlLockNode.nodes.Count > 0)
@@ -57,7 +63,14 @@ namespace ControlLock
                 CLBtn.ToolTip = "Control Lock";
                 CLBtn.OnClick += (e) =>
                 {
-                    ToolbarClick();
+                    if (e.MouseButton == 0)
+                    {
+                        ToolbarClick();
+                    }
+                    if (e.MouseButton == 1)
+                    {
+                        showKeysWindow = !showKeysWindow;
+                    } 
                 };
             }
             else
@@ -65,9 +78,43 @@ namespace ControlLock
                 GameEvents.onGUIApplicationLauncherReady.Add(AddButtons);
                 //GameEvents.onGUIApplicationLauncherUnreadifying.Add(RemoveButtons);
             }
-            
+            settings = LoadSettings();
         }
 
+        public void SaveKeys()
+        {
+            ConfigNode toSave = new ConfigNode("ControlLockConfig");
+            toSave.AddValue("CtrlLockKey", clKey.ToString());
+            toSave.AddValue("CtrlLockModKey", clModKey.ToString());
+            ConfigNode cfgNode = new ConfigNode("ControlLock");
+            cfgNode.AddNode(toSave);
+            cfgNode.Save(KSPUtil.ApplicationRootPath + "GameData/001ControlLock/ControlLock.cfg");
+        }
+
+        private ConfigNode LoadSettings()
+        {
+            
+            {
+                ConfigNode nodeLoad = new ConfigNode("ControlLockConfig");
+                nodeLoad = GameDatabase.Instance.GetConfigNode("001ControlLock/ControlLock/ControlLockConfig");
+                if (nodeLoad == null)
+                {
+                    Debug.Log("node null");
+                    nodeLoad = new ConfigNode("ControlLockConfig");
+                }
+                if (!nodeLoad.HasValue("CtrlLockKey"))
+                {
+                    nodeLoad.AddValue("CtrlLockKey", "None");
+                }
+                if (!nodeLoad.HasValue("CtrlLockModKey"))
+                {
+                    nodeLoad.AddValue("CtrlLockModKey", "None");
+                }
+                clKey = (KeyCode)Enum.Parse(typeof(KeyCode), nodeLoad.GetValue("CtrlLockKey"));
+                clModKey = (KeyCode)Enum.Parse(typeof(KeyCode), nodeLoad.GetValue("CtrlLockModKey"));
+                return nodeLoad;
+            }
+        }
         //public void OnDisable()
         //{
         //    if (!ToolbarManager.ToolbarAvailable) //check if toolbar available, load if it is
@@ -118,7 +165,7 @@ namespace ControlLock
         {
                 if (!buttonCreated)
                 {
-                    CLButton = ApplicationLauncher.Instance.AddModApplication(ToolbarClick, ToolbarClick, DummyVoid, DummyVoid, DummyVoid, DummyVoid, ApplicationLauncher.AppScenes.ALWAYS, (Texture)GameDatabase.Instance.GetTexture("001ControlLock/ToolbarButton", false));
+                    CLButton = ApplicationLauncher.Instance.AddModApplication(StockToolbarClick, StockToolbarClick, DummyVoid, DummyVoid, DummyVoid, DummyVoid, ApplicationLauncher.AppScenes.ALWAYS, (Texture)GameDatabase.Instance.GetTexture("001ControlLock/ToolbarButton", false));
                     GameEvents.onGUIApplicationLauncherReady.Remove(AddButtons);
                     buttonCreated = true;
                 }
@@ -128,6 +175,18 @@ namespace ControlLock
         //    Debug.Log("destroy button");
         //    ApplicationLauncher.Instance.RemoveModApplication(CLButton);
         //}
+
+        public void StockToolbarClick()
+        {
+            if (Input.GetMouseButtonUp(1))
+            {
+                showKeysWindow = !showKeysWindow;
+            }
+            else
+            {
+                ToolbarClick();
+            }
+        }
 
         public void DummyVoid()
         {
@@ -157,7 +216,7 @@ namespace ControlLock
 
         public void ToolbarClick()
         {
-            Debug.Log("clicked");
+            //Debug.Log("clicked");
             if(!lockedMods.Contains("ButtonLock")) //are we currently locked by toolbar button? 
             {
                 SetFullLock("ButtonLock"); //no we are not, lock
@@ -192,6 +251,71 @@ namespace ControlLock
                 InputLockManager.SetControlLock((ControlTypes)18442513152965869503, "ControlLock");
                 lockIsSet = true;
             }
+
+            if(clModKey == KeyCode.None && Input.GetKeyDown(clKey) || clModKey != KeyCode.None && Input.GetKey(clModKey) && Input.GetKeyDown(clKey)) //keypress?
+            {
+                ToolbarClick();
+            }
+        }
+
+        public void OnGUI()
+        {
+            if (showKeysWindow)
+            {
+                GUI.Window(45779, new Rect((Screen.width / 2) - 100, 75, 200, 70), ControlLockWindow, "Control Lock", HighLogic.Skin.window);
+            }
+        }
+
+        public void ControlLockWindow(int windowId)
+        {
+            HighLogic.Skin.button.alignment = TextAnchor.MiddleCenter;
+            HighLogic.Skin.label.alignment = TextAnchor.MiddleCenter;
+            if (setClKey || setClModKey)
+            {
+                if (GUI.Button(new Rect(25, 27, 150, 20), "Clear Key Assignment", HighLogic.Skin.button))
+                {
+                    if(setClKey)
+                    {
+                        clKey = KeyCode.None;
+                        setClKey = false;
+                    }
+                    else
+                    {
+                        clModKey = KeyCode.None;
+                        setClModKey = false;
+                    }
+                    SaveKeys();
+                }
+                GUI.Label(new Rect(25, 47, 150, 20), "Press New Key", HighLogic.Skin.label);
+                if (Event.current.keyCode != KeyCode.None) //wait for keypress
+                {
+                    if (setClKey)
+                    {
+                        clKey = Event.current.keyCode;
+                        setClKey = false;
+                    }
+                    else
+                    {
+                        clModKey = Event.current.keyCode;
+                        setClModKey = false;
+                    }
+                    SaveKeys();
+                }
+            }
+            else
+            {
+                if (GUI.Button(new Rect(100, 27, 80, 20), clKey.ToString(), HighLogic.Skin.button))
+                {
+                    setClKey = true;
+                }
+                if (GUI.Button(new Rect(10, 27, 80, 20), clModKey.ToString(), HighLogic.Skin.button))
+                {
+                    setClModKey = true;
+                }
+                GUI.Label(new Rect(100, 47, 80, 20), "Key", HighLogic.Skin.label);
+                GUI.Label(new Rect(10, 47, 80, 20), "Modifier", HighLogic.Skin.label);
+            }
+            
         }
 
         public static void SetFullLock(string modName) //set the lock
@@ -205,13 +329,14 @@ namespace ControlLock
                 UnbindKeys();
                 lockIsSet = true; //set our lock true as we just locked everything
                 InputLockManager.SetControlLock((ControlTypes)18442513152965869503, "ControlLock");
+                //InputLockManager.SetControlLock(ControlTypes.All, "ControlLock");
              }
             UpdateButton();
         }
 
         private static void UnbindKeys() //unbind our keys
         {
-            Debug.Log("ControlLock set!");
+            //Debug.Log("ControlLock set!");
             foreach (KeyBindString kb in allKeys) //find all keybinds in the game
             {
                 if (kb.keyBind2.primary != KeyCode.None || kb.keyBind2.secondary != KeyCode.None) //only unbind if that action is actually bound to a key
@@ -260,7 +385,7 @@ namespace ControlLock
 
         private static void RebindKeys()
         {
-            Debug.Log("ControlLock release!");
+            //Debug.Log("ControlLock release!");
             foreach (KeyBindString kb in allKeys) //find all keybinds in the game
             {
                 if(unboundKeys.Where(kb2 => kb2.keyBind == kb.keyBindString).Count() >= 1) //did we unbind this key?
