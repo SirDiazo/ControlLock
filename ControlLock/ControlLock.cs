@@ -39,7 +39,7 @@ namespace ControlLock
             unboundKeys = new List<KeyBind>();
             allKeys = new List<KeyBindString>();
             allKeys = GetKeyList();
-            Debug.Log("ControlLock V1.3 Started");
+            Debug.Log("ControlLock V1.4 Started");
             DoNotDestroy.DontDestroyOnLoad(this); //never unload this class so we persist across scenes.
             ConfigNode controlLockNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/001ControlLock/LockedKeys.cfg");
             if(controlLockNode.nodes.Count > 0)
@@ -422,22 +422,23 @@ namespace ControlLock
             kbList.Add(new KeyBindString(GameSettings.CustomActionGroup7, "CustomActionGroup7"));
             kbList.Add(new KeyBindString(GameSettings.CustomActionGroup8, "CustomActionGroup8"));
             kbList.Add(new KeyBindString(GameSettings.CustomActionGroup9, "CustomActionGroup9"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_linBack, "Docking_linBack"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_linDown, "Docking_linDown"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_linFwd, "Docking_linFwd"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_linLeft, "Docking_linLeft"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_linRight, "Docking_linRight"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_linUp, "Docking_linUp"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_pitchDown, "Docking_pitchDown"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_pitchUp, "Docking_pitchUp"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_rollLeft, "Docking_rollLeft"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_rollRight, "Docking_rollRight"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_staging, "Docking_staging"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_throttleDown, "Docking_throttleDown"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_throttleUp, "Docking_throttleUp"));
             kbList.Add(new KeyBindString(GameSettings.Docking_toggleRotLin, "Docking_toggleRotLin"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_yawLeft, "Docking_yawLeft"));
-            kbList.Add(new KeyBindString(GameSettings.Docking_yawRight, "Docking_yawRight"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_linBack, "Docking_linBack"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_linDown, "Docking_linDown"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_linFwd, "Docking_linFwd"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_linLeft, "Docking_linLeft"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_linRight, "Docking_linRight"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_linUp, "Docking_linUp"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_pitchDown, "Docking_pitchDown"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_pitchUp, "Docking_pitchUp"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_rollLeft, "Docking_rollLeft"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_rollRight, "Docking_rollRight"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_staging, "Docking_staging"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_throttleDown, "Docking_throttleDown"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_throttleUp, "Docking_throttleUp"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_toggleRotLin, "Docking_toggleRotLin"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_yawLeft, "Docking_yawLeft"));
+            //kbList.Add(new KeyBindString(GameSettings.Docking_yawRight, "Docking_yawRight"));
             kbList.Add(new KeyBindString(GameSettings.Editor_coordSystem, "Editor_coordSystem"));
             kbList.Add(new KeyBindString(GameSettings.Editor_fineTweak, "Editor_fineTweak"));
             kbList.Add(new KeyBindString(GameSettings.Editor_modeOffset, "Editor_modeOffset"));
@@ -455,6 +456,7 @@ namespace ControlLock
             kbList.Add(new KeyBindString(GameSettings.Editor_yawLeft, "Editor_yawLeft"));
             kbList.Add(new KeyBindString(GameSettings.Editor_yawRight,"Editor_yawRight"));
             kbList.Add(new KeyBindString(GameSettings.EVA_back, "EVA_back"));
+            kbList.Add(new KeyBindString(GameSettings.EVA_Board, "EVA_Board"));
             kbList.Add(new KeyBindString(GameSettings.EVA_forward, "EVA_forward"));
             kbList.Add(new KeyBindString(GameSettings.EVA_Jump, "EVA_Jump"));
             kbList.Add(new KeyBindString(GameSettings.EVA_left, "EVA_left"));
