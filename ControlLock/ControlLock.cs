@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.Reflection;
+using KSP.UI.Screens;
+using System.Collections;
 
 namespace ControlLock
 {
@@ -22,7 +24,7 @@ namespace ControlLock
         static Texture buttonRed = new Texture2D(64, 64);
         static Texture buttonYellow = new Texture2D(64, 64);
         private ConfigNode settings;
-        private bool showKeysWindow;
+        private static bool showKeysWindow;
         private KeyCode clKey;
         private KeyCode clModKey;
         private bool setClKey;
@@ -39,7 +41,7 @@ namespace ControlLock
             unboundKeys = new List<KeyBind>();
             allKeys = new List<KeyBindString>();
             allKeys = GetKeyList();
-            Debug.Log("ControlLock V1.4 Started");
+            Debug.Log("ControlLock V1.5 Started");
             DoNotDestroy.DontDestroyOnLoad(this); //never unload this class so we persist across scenes.
             ConfigNode controlLockNode = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/001ControlLock/LockedKeys.cfg");
             if(controlLockNode.nodes.Count > 0)
@@ -75,7 +77,7 @@ namespace ControlLock
             }
             else
             {
-                GameEvents.onGUIApplicationLauncherReady.Add(AddButtons);
+                StartCoroutine(AddButtons());//GameEvents.onGUIApplicationLauncherReady.Add(AddButtons);
                 //GameEvents.onGUIApplicationLauncherUnreadifying.Add(RemoveButtons);
             }
             settings = LoadSettings();
@@ -99,7 +101,7 @@ namespace ControlLock
                 nodeLoad = GameDatabase.Instance.GetConfigNode("001ControlLock/ControlLock/ControlLockConfig");
                 if (nodeLoad == null)
                 {
-                    Debug.Log("node null");
+                    Debug.Log("CtrlLock: node null");
                     nodeLoad = new ConfigNode("ControlLockConfig");
                 }
                 if (!nodeLoad.HasValue("CtrlLockKey"))
@@ -115,14 +117,19 @@ namespace ControlLock
                 return nodeLoad;
             }
         }
-        //public void OnDisable()
-        //{
-        //    if (!ToolbarManager.ToolbarAvailable) //check if toolbar available, load if it is
-        //    {
-        //        GameEvents.onGUIApplicationLauncherReady.Remove(AddButtons);
-        //        //GameEvents.onGUIApplicationLauncherUnreadifying.Remove(RemoveButtons);
-        //    }
-        //}
+        public void OnDisable()
+        {
+            if (ToolbarManager.ToolbarAvailable) //check if toolbar available, load if it is
+            {
+                //GameEvents.onGUIApplicationLauncherReady.Remove(AddButtons);
+                //GameEvents.onGUIApplicationLauncherUnreadifying.Remove(RemoveButtons);
+                CLBtn.Destroy();
+            }
+            else
+            {
+                ApplicationLauncher.Instance.RemoveModApplication(CLButton);
+            }
+        }
 
         public static void UpdateButton()
         {
@@ -161,12 +168,34 @@ namespace ControlLock
             }
         }
 
-        public void AddButtons()
+        //public Callback TextTest = Delegate
+        //{
+            
+        //}
+
+        //delegate testDel()
+        //{
+        public Callback rightClick = delegate //this is the right click button now, note this breaks references forcing the static bool 
         {
-                if (!buttonCreated)
+            //Debug.Log("CL deltest");
+            showKeysWindow = !showKeysWindow;
+        };
+        
+
+    
+
+        IEnumerator AddButtons()
+        {
+            while(!ApplicationLauncher.Ready)
+            {
+                yield return null;
+            }
+            if (!buttonCreated)
                 {
                     CLButton = ApplicationLauncher.Instance.AddModApplication(StockToolbarClick, StockToolbarClick, DummyVoid, DummyVoid, DummyVoid, DummyVoid, ApplicationLauncher.AppScenes.ALWAYS, (Texture)GameDatabase.Instance.GetTexture("001ControlLock/ToolbarButton", false));
-                    GameEvents.onGUIApplicationLauncherReady.Remove(AddButtons);
+                    //GameEvents.onGUIApplicationLauncherReady.Remove(AddButtons);
+                    //CLButton.onLeftClick(StockToolbarClick);
+                    CLButton.onRightClick = (Callback)Delegate.Combine(CLButton.onRightClick, rightClick); //combine delegates together
                     buttonCreated = true;
                 }
         }
@@ -178,14 +207,18 @@ namespace ControlLock
 
         public void StockToolbarClick()
         {
-            if (Input.GetMouseButtonUp(1))
-            {
-                showKeysWindow = !showKeysWindow;
-            }
-            else
-            {
-                ToolbarClick();
-            }
+            //right-clicks now done via delegate combination
+
+            //Debug.Log("C: " + Event.current.button);
+            //if (Event.current.button==1)
+            //{
+                
+            //    showKeysWindow = !showKeysWindow;
+            //}
+            //else
+            //{
+               ToolbarClick();
+            //}
         }
 
         public void DummyVoid()
@@ -232,12 +265,13 @@ namespace ControlLock
             lockedMods.Clear();
             if (lockIsSet)
             {
-                RebindKeys();
+                InputLockManager.RemoveControlLock("ControlLock");
+                RebindKeys(); 
                 lockIsSet = false;
             }
         }
 
-        public void Update() //error trap, neither of these should ever run, but just in case we are checking
+        public void Update() //error trap, neither of these should ever run, but just in case we are checking 
         {
             if(lockedMods.Count == 0 && lockIsSet)
             {
@@ -270,6 +304,11 @@ namespace ControlLock
         {
             HighLogic.Skin.button.alignment = TextAnchor.MiddleCenter;
             HighLogic.Skin.label.alignment = TextAnchor.MiddleCenter;
+            if (GUI.Button(new Rect(145, 5, 50, 20), "RESET", HighLogic.Skin.button))
+            {
+                SceneSwitch(GameScenes.FLIGHT); //use the clear options that sceneswitch does
+                UpdateButton();
+            }
             if (setClKey || setClModKey)
             {
                 if (GUI.Button(new Rect(25, 27, 150, 20), "Clear Key Assignment", HighLogic.Skin.button))
@@ -328,8 +367,12 @@ namespace ControlLock
             {
                 UnbindKeys();
                 lockIsSet = true; //set our lock true as we just locked everything
-                InputLockManager.SetControlLock((ControlTypes)18442513152965869503, "ControlLock");
-                //InputLockManager.SetControlLock(ControlTypes.All, "ControlLock");
+                //ulong lmask = 17293822569102705000;
+                //InputLockManager.SetControlLock((ControlTypes)111011111111111111111111111111111111111111111111111111b, "ControlLock");
+                //InputLockManager.SetControlLock(~ControlTypes.UI_MAIN, "ControlLock");
+                ControlTypes myLock = ~ControlTypes.UI_MAIN;
+                myLock ^= ControlTypes.UI_DIALOGS;
+                InputLockManager.SetControlLock(myLock, "ControlLock");
              }
             UpdateButton();
         }
@@ -554,4 +597,12 @@ namespace ControlLock
             keyBindString = str;
         }
     }
+
+    //public class MyLauncherButton :ApplicationLauncherButton
+    //{
+    //    public override Callback onRightClick()
+    //    {
+
+    //}
+    //}
 }
